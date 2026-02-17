@@ -27,19 +27,17 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.4);
         }
 
-        /* FLOATING HEADER: No background, just clean text on map */
         .header-container {
             position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000;
             text-align: center; pointer-events: none;
             white-space: nowrap; transition: opacity 0.4s ease;
         }
 
-        /* Stealth logic: Hides text when a card is open */
         #map:has(.leaflet-popup) ~ .header-container { opacity: 0; }
 
         .header-container h1 { 
             margin: 0; font-size: 22px; color: white; 
-            text-shadow: 2px 2px 8px rgba(0,0,0,0.8); /* Ensures readability against any map part */
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
         }
 
         .sidebar-header { margin-top: 50px; border-bottom: 2px solid #d7ccc8; padding-bottom: 15px; margin-bottom: 20px; }
@@ -183,7 +181,10 @@
                         var marker = L.marker([lat, lng], { icon: emojiIcon }).bindPopup(popupContent);
                         var btn = document.createElement('button');
                         btn.className = 'zoom-btn';
-                        btn.innerHTML = `🍷 ${item.Name}`;
+                        
+                        // FIX: Pulling the specific emoji for the sidebar button text
+                        btn.innerHTML = `${catInfo.emoji} ${item.Name}`;
+                        
                         btn.onclick = function() { 
                             map.flyTo([lat, lng], 6); 
                             marker.openPopup(); 
