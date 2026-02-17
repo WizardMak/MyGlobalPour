@@ -27,25 +27,23 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.4);
         }
 
-        /* REFINED HEADER: Sophisticated Dark Glass Effect */
+        /* SOLID SLEEK HEADER: No transparency to prevent map crashes */
         .header-container {
             position: absolute; top: 0; left: 0; width: 100%; z-index: 1000;
-            background: rgba(0, 31, 63, 0.7); /* Match navy map background with transparency */
-            backdrop-filter: blur(10px); /* Frosted glass effect */
-            -webkit-backdrop-filter: blur(10px);
+            background: #001f3f; /* Solid Navy */
             padding: 15px 0;
-            border-bottom: 1px solid rgba(215, 204, 200, 0.3); /* Subtle copper-tone border */
+            border-bottom: 2px solid #5d4037; /* Copper/Brown accent line */
             text-align: center; pointer-events: none;
-            white-space: nowrap; transition: opacity 0.4s ease, transform 0.4s ease;
+            white-space: nowrap; transition: opacity 0.4s ease;
         }
 
         /* Hides header when a popup/card is open */
-        #map:has(.leaflet-popup) ~ .header-container { opacity: 0; transform: translateY(-100%); }
+        #map:has(.leaflet-popup) ~ .header-container { opacity: 0; }
 
         .header-container h1 { 
-            margin: 0; font-size: 24px; color: #fdfbf7; 
-            letter-spacing: 2px; text-transform: uppercase;
-            font-weight: 300; /* Lighter weight for elegance */
+            margin: 0; font-size: 22px; color: #fdfbf7; 
+            letter-spacing: 3px; text-transform: uppercase;
+            font-weight: 300;
         }
 
         .sidebar-header { margin-top: 50px; border-bottom: 2px solid #d7ccc8; padding-bottom: 15px; margin-bottom: 20px; }
@@ -165,4 +163,41 @@
                     if(item.Name && !isNaN(lat) && !isNaN(lng)) {
                         var statusText = String(item.Status || "").trim();
                         var statusClass = (statusText.toLowerCase().includes("bar") || statusText.toLowerCase() === "mybar") ? "in-my-bar" : "my-wishlist";
-                        var catInfo = spiritData[item.Category] ||
+                        var catInfo = spiritData[item.Category] || { emoji: "🍷", text: "A premium selection." };
+
+                        var emojiIcon = L.divIcon({
+                            className: 'emoji-marker',
+                            html: catInfo.emoji,
+                            iconSize: [30, 30],
+                            iconAnchor: [15, 15]
+                        });
+
+                        var popupContent = `
+                            <div class="tasting-card">
+                                <h2>${item.Name}</h2>
+                                <div class="sub-header">
+                                    ${catInfo.emoji} ${item.Category} - <span class="one-liner-text">${catInfo.text}</span>
+                                </div>
+                                <div class="region-country">📍 Region - ${item.Country}</div>
+                                <div class="status-badge ${statusClass}">${statusText}</div>
+                                <p>${item.Description}</p>
+                            </div>
+                        `;
+
+                        var marker = L.marker([lat, lng], { icon: emojiIcon }).bindPopup(popupContent);
+                        var btn = document.createElement('button');
+                        btn.className = 'zoom-btn';
+                        btn.innerHTML = `🍷 ${item.Name}`;
+                        btn.onclick = function() { 
+                            map.flyTo([lat, lng], 6); 
+                            marker.openPopup(); 
+                        };
+                        allData.push({ marker: marker, button: btn, category: item.Category });
+                    }
+                });
+                filterAll();
+            }
+        });
+    </script>
+</body>
+</html>
