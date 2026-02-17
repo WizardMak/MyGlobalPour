@@ -3,6 +3,7 @@
 <head>
     <title>My Global Pour | Collection</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥃</text></svg>">
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <style>
@@ -30,9 +31,17 @@
             position: absolute; top: 15px; left: 50%; transform: translateX(-50%); z-index: 1000;
             background: rgba(255, 255, 255, 0.95); padding: 10px 40px; border-radius: 50px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2); text-align: center; pointer-events: none;
-            white-space: nowrap; transition: opacity 0.4s ease, transform 0.4s ease;
+            white-space: nowrap; transition: opacity 0.4s ease;
         }
-        .header-hidden { opacity: 0; transform: translate(-50%, -20px); }
+
+        /* --- THE MAGIC FIX --- */
+        /* If a Leaflet popup is present, hide the header */
+        #map:has(.leaflet-popup) ~ .header-container,
+        #map:has(.leaflet-popup) + .header-container,
+        .leaflet-popup-pane:not(:empty) ~ .header-container {
+            opacity: 0;
+        }
+        /* --------------------- */
 
         .emoji-marker {
             background: white; border: 2px solid #5d4037; border-radius: 50%;
@@ -79,11 +88,10 @@
         <div id="zoom-controls"></div>
     </div>
 
-    <div id="mainHeader" class="header-container">
+    <div id="map"></div>
+    <div class="header-container">
         <h1>🌎 My Global Pour 🥃</h1>
     </div>
-
-    <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
@@ -109,19 +117,12 @@
 
         function toggleSidebar() {
             var sidebar = document.getElementById('sidebar');
-            var header = document.getElementById('mainHeader');
             sidebar.classList.toggle('open');
             if (!sidebar.classList.contains('open')) {
                 map.flyTo([20, 0], 2.8);
                 map.closePopup();
-                header.classList.remove('header-hidden'); // Show header on reset
             }
         }
-
-        // Show header if popup is closed manually
-        map.on('popupclose', function() {
-            document.getElementById('mainHeader').classList.remove('header-hidden');
-        });
 
         window.onload = function() {
             setTimeout(function(){ map.invalidateSize(); }, 500);
@@ -168,4 +169,30 @@
 
                         var popupContent = `
                             <div class="tasting-card">
-                                <h2>
+                                <h2>${item.Name}</h2>
+                                <div class="sub-header">
+                                    ${catInfo.emoji} ${item.Category} - <span class="one-liner-text">${catInfo.text}</span>
+                                </div>
+                                <div class="region-country">📍 Region - ${item.Country}</div>
+                                <div class="status-badge ${statusClass}">${statusText}</div>
+                                <p>${item.Description}</p>
+                            </div>
+                        `;
+
+                        var marker = L.marker([lat, lng], { icon: emojiIcon }).bindPopup(popupContent);
+                        var btn = document.createElement('button');
+                        btn.className = 'zoom-btn';
+                        btn.innerHTML = `🍷 ${item.Name}`;
+                        btn.onclick = function() { 
+                            map.flyTo([lat, lng], 6); 
+                            marker.openPopup(); 
+                        };
+                        allData.push({ marker: marker, button: btn, category: item.Category });
+                    }
+                });
+                filterAll();
+            }
+        });
+    </script>
+</body>
+</html>
