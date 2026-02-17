@@ -21,7 +21,7 @@
         #map { height: 100vh; width: 100vw; background: #001f3f; }
         
         #toggle-btn {
-            position: absolute; top: 15px; left: 15px; z-index: 2500;
+            position: absolute; top: 15px; left: 15px; z-index: 2501;
             background: #5d4037; color: white; border: none; padding: 12px 20px;
             border-radius: 50px; cursor: pointer; font-weight: bold; 
             box-shadow: 0 4px 10px rgba(0,0,0,0.4);
@@ -32,16 +32,17 @@
             text-align: center; pointer-events: none;
             white-space: nowrap; transition: opacity 0.4s ease;
         }
-
         #map:has(.leaflet-popup) ~ .header-container { opacity: 0; }
-
-        .header-container h1 { 
-            margin: 0; font-size: 22px; color: white; 
-            text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
-        }
+        .header-container h1 { margin: 0; font-size: 22px; color: white; text-shadow: 2px 2px 8px rgba(0,0,0,0.8); }
 
         .sidebar-header { margin-top: 50px; border-bottom: 2px solid #d7ccc8; padding-bottom: 15px; margin-bottom: 20px; }
+        .filter-label { font-size: 11px; font-weight: bold; color: #8d6e63; text-transform: uppercase; margin-bottom: 5px; display: block; }
         
+        .custom-select { 
+            width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 8px; 
+            border: 1px solid #d7ccc8; background: #fff; cursor: pointer; font-weight: 600; color: #5d4037;
+        }
+
         .emoji-marker {
             background: white; border: 2px solid #5d4037; border-radius: 50%;
             text-align: center; line-height: 30px; font-size: 20px;
@@ -72,9 +73,11 @@
 
     <div id="sidebar">
         <div class="sidebar-header">
-            <h2 style="color: #5d4037; margin-bottom: 15px;">🍾 My Collection</h2>
-            <select id="categoryFilter" onchange="filterAll()" style="width:100%; padding:10px; border-radius:8px; border: 1px solid #d7ccc8;">
-                <option value="All">All Categories</option>
+            <h2 style="color: #5d4037; margin-bottom: 20px;">🍾 My Collection</h2>
+            
+            <span class="filter-label">Spirit Category</span>
+            <select id="categoryFilter" class="custom-select" onchange="filterAll()">
+                <option value="All">All Drinks Collection</option>
                 <option value="Whiskey">Whiskey</option>
                 <option value="Gin">Gin</option>
                 <option value="Rum">Rum</option>
@@ -82,8 +85,15 @@
                 <option value="Vodka">Vodka</option>
                 <option value="Brandy">Brandy</option>
             </select>
+
+            <span class="filter-label">Availability</span>
+            <select id="statusFilter" class="custom-select" onchange="filterAll()">
+                <option value="All">Show All Status</option>
+                <option value="In My Bar">In My Bar</option>
+                <option value="Wishlist">On Wishlist</option>
+            </select>
         </div>
-        <div id="stats-display" style="font-size:13px; color:#8d6e63; margin-bottom:20px;">Loading Collection...</div>
+        <div id="stats-display" style="font-size:13px; color:#8d6e63; margin-bottom:20px; font-weight: 600;"></div>
         <div id="zoom-controls"></div>
     </div>
 
@@ -130,13 +140,17 @@
         var spreadsheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSJGK6JrWMMmQ_hsZ-jXvoeDRWZOw0qIghhR5-8gMdU4UfdTImEaO0ogvJw01S8i5QWebwITE9CKaMO/pub?output=csv';
 
         function filterAll() {
-            var selected = document.getElementById('categoryFilter').value;
+            var catSelected = document.getElementById('categoryFilter').value;
+            var statSelected = document.getElementById('statusFilter').value;
             var controls = document.getElementById('zoom-controls');
             controls.innerHTML = "";
             var visibleCount = 0;
 
             allData.forEach(function(item) {
-                if (selected === "All" || item.category === selected) {
+                var matchesCat = (catSelected === "All" || item.category === catSelected);
+                var matchesStat = (statSelected === "All" || item.status.toLowerCase().includes(statSelected.toLowerCase()));
+
+                if (matchesCat && matchesStat) {
                     map.addLayer(item.marker);
                     controls.appendChild(item.button);
                     visibleCount++;
@@ -144,7 +158,17 @@
                     map.removeLayer(item.marker);
                 }
             });
-            document.getElementById('stats-display').innerHTML = `Showing <b>${visibleCount}</b> unique selections.`;
+
+            // Specific dynamic status text
+            let statusText = "";
+            if (catSelected === "All" && statSelected === "All") {
+                statusText = `Showing all <b>${visibleCount}</b> drinks in collection.`;
+            } else {
+                let catLabel = catSelected === "All" ? "drinks" : catSelected;
+                let statLabel = statSelected === "All" ? "" : ` (${statSelected})`;
+                statusText = `Showing <b>${visibleCount}</b> ${catLabel}${statLabel}.`;
+            }
+            document.getElementById('stats-display').innerHTML = statusText;
         }
 
         Papa.parse(spreadsheetURL, {
@@ -156,7 +180,8 @@
 
                     if(item.Name && !isNaN(lat) && !isNaN(lng)) {
                         var statusText = String(item.Status || "").trim();
-                        var statusClass = (statusText.toLowerCase().includes("bar") || statusText.toLowerCase() === "mybar") ? "in-my-bar" : "my-wishlist";
+                        var isMyBar = statusText.toLowerCase().includes("bar") || statusText.toLowerCase() === "mybar";
+                        var statusClass = isMyBar ? "in-my-bar" : "my-wishlist";
                         var catInfo = spiritData[item.Category] || { emoji: "🍷", text: "A premium selection." };
 
                         var emojiIcon = L.divIcon({
@@ -181,15 +206,12 @@
                         var marker = L.marker([lat, lng], { icon: emojiIcon }).bindPopup(popupContent);
                         var btn = document.createElement('button');
                         btn.className = 'zoom-btn';
-                        
-                        // FIX: Pulling the specific emoji for the sidebar button text
-                        btn.innerHTML = `${catInfo.emoji} ${item.Name}`;
-                        
+                        btn.innerHTML = `${catInfo.emoji} ${item.Name}`; // Sourced Emoji for list
                         btn.onclick = function() { 
                             map.flyTo([lat, lng], 6); 
                             marker.openPopup(); 
                         };
-                        allData.push({ marker: marker, button: btn, category: item.Category });
+                        allData.push({ marker: marker, button: btn, category: item.Category, status: statusText });
                     }
                 });
                 filterAll();
