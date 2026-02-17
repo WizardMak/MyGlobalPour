@@ -27,6 +27,7 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.4);
         }
 
+        /* Stealth Header Logic */
         .header-container {
             position: absolute; top: 15px; left: 50%; transform: translateX(-50%); z-index: 1000;
             background: rgba(255, 255, 255, 0.95); padding: 10px 40px; border-radius: 50px;
@@ -34,14 +35,17 @@
             white-space: nowrap; transition: opacity 0.4s ease;
         }
 
-        /* --- THE MAGIC FIX --- */
-        /* If a Leaflet popup is present, hide the header */
-        #map:has(.leaflet-popup) ~ .header-container,
-        #map:has(.leaflet-popup) + .header-container,
-        .leaflet-popup-pane:not(:empty) ~ .header-container {
-            opacity: 0;
+        /* Hides header when a popup/card is open */
+        #map:has(.leaflet-popup) ~ .header-container { opacity: 0; }
+
+        .sidebar-header { margin-top: 50px; border-bottom: 2px solid #d7ccc8; padding-bottom: 15px; margin-bottom: 20px; }
+        
+        #reset-btn {
+            width: 100%; padding: 12px; margin-bottom: 15px; background: #5d4037;
+            color: white; border: none; border-radius: 8px; cursor: pointer;
+            font-weight: bold; font-size: 14px; transition: background 0.3s;
         }
-        /* --------------------- */
+        #reset-btn:hover { background: #3e2723; }
 
         .emoji-marker {
             background: white; border: 2px solid #5d4037; border-radius: 50%;
@@ -72,9 +76,10 @@
     <button id="toggle-btn" onclick="toggleSidebar()">☰ MyCollectionList</button>
 
     <div id="sidebar">
-        <div style="margin-top: 50px; border-bottom: 2px solid #d7ccc8; padding-bottom: 15px; margin-bottom: 20px;">
-            <h2 style="color: #5d4037; margin: 0;">🍾 My Collection</h2>
-            <select id="categoryFilter" onchange="filterAll()" style="width:100%; padding:10px; margin-top:15px; border-radius:8px;">
+        <div class="sidebar-header">
+            <h2 style="color: #5d4037; margin-bottom: 15px;">🍾 My Collection</h2>
+            <button id="reset-btn" onclick="resetMapView()">World View 🌎</button>
+            <select id="categoryFilter" onchange="filterAll()" style="width:100%; padding:10px; border-radius:8px; border: 1px solid #d7ccc8;">
                 <option value="All">All Categories</option>
                 <option value="Whiskey">Whiskey</option>
                 <option value="Gin">Gin</option>
@@ -115,12 +120,16 @@
             noWrap: true, bounds: [[-90, -180], [90, 180]], attribution: 'Esri'
         }).addTo(map);
 
+        function resetMapView() {
+            map.flyTo([20, 0], 2.8);
+            map.closePopup();
+        }
+
         function toggleSidebar() {
             var sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('open');
             if (!sidebar.classList.contains('open')) {
-                map.flyTo([20, 0], 2.8);
-                map.closePopup();
+                resetMapView();
             }
         }
 
