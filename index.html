@@ -27,26 +27,29 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.4);
         }
 
-        /* Stealth Header Logic */
+        /* REFINED HEADER: Sophisticated Dark Glass Effect */
         .header-container {
-            position: absolute; top: 15px; left: 50%; transform: translateX(-50%); z-index: 1000;
-            background: rgba(255, 255, 255, 0.95); padding: 10px 40px; border-radius: 50px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2); text-align: center; pointer-events: none;
-            white-space: nowrap; transition: opacity 0.4s ease;
+            position: absolute; top: 0; left: 0; width: 100%; z-index: 1000;
+            background: rgba(0, 31, 63, 0.7); /* Match navy map background with transparency */
+            backdrop-filter: blur(10px); /* Frosted glass effect */
+            -webkit-backdrop-filter: blur(10px);
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(215, 204, 200, 0.3); /* Subtle copper-tone border */
+            text-align: center; pointer-events: none;
+            white-space: nowrap; transition: opacity 0.4s ease, transform 0.4s ease;
         }
 
         /* Hides header when a popup/card is open */
-        #map:has(.leaflet-popup) ~ .header-container { opacity: 0; }
+        #map:has(.leaflet-popup) ~ .header-container { opacity: 0; transform: translateY(-100%); }
+
+        .header-container h1 { 
+            margin: 0; font-size: 24px; color: #fdfbf7; 
+            letter-spacing: 2px; text-transform: uppercase;
+            font-weight: 300; /* Lighter weight for elegance */
+        }
 
         .sidebar-header { margin-top: 50px; border-bottom: 2px solid #d7ccc8; padding-bottom: 15px; margin-bottom: 20px; }
         
-        #reset-btn {
-            width: 100%; padding: 12px; margin-bottom: 15px; background: #5d4037;
-            color: white; border: none; border-radius: 8px; cursor: pointer;
-            font-weight: bold; font-size: 14px; transition: background 0.3s;
-        }
-        #reset-btn:hover { background: #3e2723; }
-
         .emoji-marker {
             background: white; border: 2px solid #5d4037; border-radius: 50%;
             text-align: center; line-height: 30px; font-size: 20px;
@@ -78,7 +81,6 @@
     <div id="sidebar">
         <div class="sidebar-header">
             <h2 style="color: #5d4037; margin-bottom: 15px;">🍾 My Collection</h2>
-            <button id="reset-btn" onclick="resetMapView()">World View 🌎</button>
             <select id="categoryFilter" onchange="filterAll()" style="width:100%; padding:10px; border-radius:8px; border: 1px solid #d7ccc8;">
                 <option value="All">All Categories</option>
                 <option value="Whiskey">Whiskey</option>
@@ -95,7 +97,7 @@
 
     <div id="map"></div>
     <div class="header-container">
-        <h1>🌎 My Global Pour 🥃</h1>
+        <h1>🗺️ MY GLOBAL POUR 🥃</h1>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -120,16 +122,12 @@
             noWrap: true, bounds: [[-90, -180], [90, 180]], attribution: 'Esri'
         }).addTo(map);
 
-        function resetMapView() {
-            map.flyTo([20, 0], 2.8);
-            map.closePopup();
-        }
-
         function toggleSidebar() {
             var sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('open');
             if (!sidebar.classList.contains('open')) {
-                resetMapView();
+                map.flyTo([20, 0], 2.8);
+                map.closePopup();
             }
         }
 
@@ -167,41 +165,4 @@
                     if(item.Name && !isNaN(lat) && !isNaN(lng)) {
                         var statusText = String(item.Status || "").trim();
                         var statusClass = (statusText.toLowerCase().includes("bar") || statusText.toLowerCase() === "mybar") ? "in-my-bar" : "my-wishlist";
-                        var catInfo = spiritData[item.Category] || { emoji: "🍷", text: "A premium selection." };
-
-                        var emojiIcon = L.divIcon({
-                            className: 'emoji-marker',
-                            html: catInfo.emoji,
-                            iconSize: [30, 30],
-                            iconAnchor: [15, 15]
-                        });
-
-                        var popupContent = `
-                            <div class="tasting-card">
-                                <h2>${item.Name}</h2>
-                                <div class="sub-header">
-                                    ${catInfo.emoji} ${item.Category} - <span class="one-liner-text">${catInfo.text}</span>
-                                </div>
-                                <div class="region-country">📍 Region - ${item.Country}</div>
-                                <div class="status-badge ${statusClass}">${statusText}</div>
-                                <p>${item.Description}</p>
-                            </div>
-                        `;
-
-                        var marker = L.marker([lat, lng], { icon: emojiIcon }).bindPopup(popupContent);
-                        var btn = document.createElement('button');
-                        btn.className = 'zoom-btn';
-                        btn.innerHTML = `🍷 ${item.Name}`;
-                        btn.onclick = function() { 
-                            map.flyTo([lat, lng], 6); 
-                            marker.openPopup(); 
-                        };
-                        allData.push({ marker: marker, button: btn, category: item.Category });
-                    }
-                });
-                filterAll();
-            }
-        });
-    </script>
-</body>
-</html>
+                        var catInfo = spiritData[item.Category] ||
