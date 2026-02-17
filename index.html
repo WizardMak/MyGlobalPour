@@ -44,15 +44,14 @@
             #toggle-btn { padding: 10px 15px; font-size: 12px; }
         }
 
-        /* Sidebar UI */
         .sidebar-header { margin-top: 50px; border-bottom: 2px solid #d7ccc8; padding-bottom: 15px; margin-bottom: 20px; }
         .filter-label { font-size: 11px; font-weight: bold; color: #8d6e63; text-transform: uppercase; margin-bottom: 4px; display: block; }
         .custom-select { width: 100%; padding: 10px; margin-bottom: 12px; border-radius: 8px; border: 1px solid #d7ccc8; background: #fff; cursor: pointer; font-weight: 600; color: #5d4037; }
         
-        /* Markers & Popups */
-        .emoji-marker { background: white; border-radius: 50%; text-align: center; line-height: 28px; font-size: 18px; box-shadow: 0 2px 5px rgba(0,0,0,0.4); border: 3px solid #ccc; }
+        .emoji-marker { background: white; border-radius: 50%; text-align: center; line-height: 28px; font-size: 18px; box-shadow: 0 2px 5px rgba(0,0,0,0.4); border: 3px solid #ccc; transition: transform 0.2s ease; }
         .border-in-bar { border-color: #2e7d32 !important; }
         .border-not-in-bar { border-color: #d32f2f !important; }
+        
         .tasting-card { padding: 5px; min-width: 200px; max-width: 250px; text-align: center; }
         .tasting-card h2 { margin: 0; font-size: 18px; color: #5d4037; text-transform: uppercase; font-weight: 800; }
         .status-badge { font-size: 10px; font-weight: bold; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; display: inline-block; margin-top: 5px; }
@@ -71,73 +70,35 @@
     <div id="sidebar">
         <div class="sidebar-header">
             <h2 style="color: #5d4037; margin-bottom: 20px;">🍾 My Collection</h2>
-            
             <span class="filter-label">Spirit Type</span>
-            <select id="categoryFilter" class="custom-select" onchange="filterAll()">
-                <option value="All">All Drinks</option>
-                <option value="Whiskey">Whiskey</option>
-                <option value="Gin">Gin</option>
-                <option value="Rum">Rum</option>
-                <option value="Tequila">Tequila</option>
-                <option value="Vodka">Vodka</option>
-                <option value="Brandy">Brandy</option>
-            </select>
-
+            <select id="categoryFilter" class="custom-select" onchange="filterAll()"><option value="All">All Drinks</option><option value="Whiskey">Whiskey</option><option value="Gin">Gin</option><option value="Rum">Rum</option><option value="Tequila">Tequila</option><option value="Vodka">Vodka</option><option value="Brandy">Brandy</option></select>
             <span class="filter-label">Origin Country</span>
-            <select id="countryFilter" class="custom-select" onchange="filterAll()">
-                <option value="All">All Countries</option>
-                </select>
-
+            <select id="countryFilter" class="custom-select" onchange="filterAll()"><option value="All">All Countries</option></select>
             <span class="filter-label">Availability</span>
-            <select id="statusFilter" class="custom-select" onchange="filterAll()">
-                <option value="All">Show All Status</option>
-                <option value="In My Bar">In My Bar</option>
-                <option value="Not in My Bar">Not in My Bar</option>
-            </select>
+            <select id="statusFilter" class="custom-select" onchange="filterAll()"><option value="All">Show All Status</option><option value="In My Bar">In My Bar</option><option value="Not in My Bar">Not in My Bar</option></select>
         </div>
         <div id="stats-display" style="font-size:13px; color:#8d6e63; margin-bottom:20px; font-weight: 600;"></div>
         <div id="zoom-controls"></div>
     </div>
 
     <div id="map"></div>
-    <div class="header-container" onclick="resetToHome()">
-        <h1>🗺️ My Global Pour 🥃</h1>
-    </div>
+    <div class="header-container" onclick="resetToHome()"><h1>🗺️ My Global Pour 🥃</h1></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         const spiritData = { "Vodka": { emoji: "🍸" }, "Gin": { emoji: "🌿" }, "Rum": { emoji: "🏴‍☠️" }, "Tequila": { emoji: "🌵" }, "Whiskey": { emoji: "🥃" }, "Brandy": { emoji: "🍇" } };
-
         var allData = [];
         var countries = new Set();
         var initialZoom = window.innerWidth < 600 ? 1.5 : 2.8;
         var initialCenter = [20, 0];
 
-        var map = L.map('map', { 
-            zoomControl: false, minZoom: 1, zoomSnap: 0.1,
-            maxBounds: [[-85, -180], [85, 180]], maxBoundsViscosity: 1.0, worldCopyJump: false
-        }).setView(initialCenter, initialZoom);
-
+        var map = L.map('map', { zoomControl: false, minZoom: 1, zoomSnap: 0.1, maxBounds: [[-85, -180], [85, 180]], maxBoundsViscosity: 1.0 }).setView(initialCenter, initialZoom);
         L.control.zoom({ position: 'bottomright' }).addTo(map);
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-            noWrap: true, bounds: [[-90, -180], [90, 180]], attribution: 'Esri'
-        }).addTo(map);
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { noWrap: true, bounds: [[-90, -180], [90, 180]], attribution: 'Esri' }).addTo(map);
 
-        function resetToHome() {
-            closeSidebarOnly();
-            map.closePopup();
-            map.flyTo(initialCenter, initialZoom, { animate: true, duration: 1.5 });
-        }
-
-        function toggleSidebar(e) {
-            if (e) e.stopPropagation();
-            var sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('open');
-            if (!sidebar.classList.contains('open')) { resetToHome(); }
-        }
-
+        function resetToHome() { closeSidebarOnly(); map.closePopup(); map.flyTo(initialCenter, initialZoom, { animate: true, duration: 1.5 }); }
+        function toggleSidebar(e) { if (e) e.stopPropagation(); var sidebar = document.getElementById('sidebar'); sidebar.classList.toggle('open'); if (!sidebar.classList.contains('open')) { resetToHome(); } }
         function closeSidebarOnly() { document.getElementById('sidebar').classList.remove('open'); }
-
         window.addEventListener('resize', function() { map.invalidateSize(); });
 
         var spreadsheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSJGK6JrWMMmQ_hsZ-jXvoeDRWZOw0qIghhR5-8gMdU4UfdTImEaO0ogvJw01S8i5QWebwITE9CKaMO/pub?output=csv';
@@ -147,18 +108,10 @@
             var countrySelected = document.getElementById('countryFilter').value;
             var statSelected = document.getElementById('statusFilter').value;
             var controls = document.getElementById('zoom-controls');
-            controls.innerHTML = "";
-            var visibleCount = 0;
-
+            controls.innerHTML = ""; var visibleCount = 0;
             allData.forEach(function(item) {
-                var matchesCat = (catSelected === "All" || item.category === catSelected);
-                var matchesCountry = (countrySelected === "All" || item.country === countrySelected);
-                var matchesStat = (statSelected === "All" || item.statusFull === statSelected);
-                
-                if (matchesCat && matchesCountry && matchesStat) {
-                    map.addLayer(item.marker);
-                    controls.appendChild(item.button);
-                    visibleCount++;
+                if ((catSelected === "All" || item.category === catSelected) && (countrySelected === "All" || item.country === countrySelected) && (statSelected === "All" || item.statusFull === statSelected)) {
+                    map.addLayer(item.marker); controls.appendChild(item.button); visibleCount++;
                 } else { map.removeLayer(item.marker); }
             });
             document.getElementById('stats-display').innerHTML = `Showing <b>${visibleCount}</b> selections.`;
@@ -168,9 +121,7 @@
             download: true, header: true,
             complete: function(results) {
                 results.data.forEach(function(item) {
-                    var lat = parseFloat(item.Lat);
-                    var lng = parseFloat(item.Long);
-
+                    var lat = parseFloat(item.Lat); var lng = parseFloat(item.Long);
                     if(item.Name && !isNaN(lat) && !isNaN(lng)) {
                         var rawStatus = String(item.Status || "").trim().toLowerCase();
                         var isMyBar = (rawStatus.startsWith("in") || rawStatus === "mybar") && !rawStatus.includes("not");
@@ -179,63 +130,30 @@
                         var borderClass = isMyBar ? "border-in-bar" : "border-not-in-bar";
                         var listClass = isMyBar ? "list-in-bar" : "list-not-in-bar";
                         var catInfo = spiritData[item.Category] || { emoji: "🍷" };
-                        
                         countries.add(item.Country);
 
-                        var emojiIcon = L.divIcon({
-                            className: `emoji-marker ${borderClass}`,
-                            html: catInfo.emoji,
-                            iconSize: [30, 30],
-                            iconAnchor: [15, 15],
-                            popupAnchor: [0, -10]
+                        var emojiIcon = L.divIcon({ className: `emoji-marker ${borderClass}`, html: catInfo.emoji, iconSize: [30, 30], iconAnchor: [15, 15], popupAnchor: [0, -10] });
+                        var popupContent = `<div class="tasting-card"><h2>${item.Name}</h2><div class="status-badge ${statusClass}">${displayStatus}</div><p>${item.Description}</p></div>`;
+
+                        // NEW MARKER LOGIC: Manual click on marker now triggers zoom
+                        var marker = L.marker([lat, lng], { icon: emojiIcon }).on('click', function(e) {
+                            var zoomLevel = window.innerWidth < 600 ? 6.5 : 6;
+                            map.flyTo(e.latlng, zoomLevel, { animate: true, duration: 1.2 });
                         });
-
-                        var popupContent = `
-                            <div class="tasting-card">
-                                <h2>${item.Name}</h2>
-                                <div class="status-badge ${statusClass}">${displayStatus}</div>
-                                <p>${item.Description}</p>
-                            </div>
-                        `;
-
-                        var marker = L.marker([lat, lng], { icon: emojiIcon })
-                            .bindPopup(popupContent, { 
-                                autoPanPadding: L.point(50, 80), 
-                                keepInView: true,
-                                closeButton: false 
-                            });
+                        marker.bindPopup(popupContent, { autoPanPadding: L.point(50, 80), keepInView: true, closeButton: false });
 
                         var btn = document.createElement('button');
-                        btn.className = `zoom-btn ${listClass}`;
-                        btn.innerHTML = `${catInfo.emoji} ${item.Name}`;
-                        
+                        btn.className = `zoom-btn ${listClass}`; btn.innerHTML = `${catInfo.emoji} ${item.Name}`;
                         btn.onclick = function(e) { 
-                            e.stopPropagation();
-                            closeSidebarOnly();
+                            e.stopPropagation(); closeSidebarOnly();
                             setTimeout(function() {
-                                // Dynamic Zoom Logic: Zoom in more on mobile (level 6) to fill the screen
                                 var zoomLevel = window.innerWidth < 600 ? 6.5 : 6;
                                 map.flyTo([lat, lng], zoomLevel, { animate: true, duration: 1.2 });
                                 marker.openPopup();
                             }, 400);
                         };
-                        
                         allData.push({ marker: marker, button: btn, category: item.Category, country: item.Country, statusFull: displayStatus });
                     }
                 });
-
-                // Populate Country Filter
                 var countryDropdown = document.getElementById('countryFilter');
-                Array.from(countries).sort().forEach(function(country) {
-                    var opt = document.createElement('option');
-                    opt.value = country;
-                    opt.innerHTML = country;
-                    countryDropdown.appendChild(opt);
-                });
-
-                filterAll();
-            }
-        });
-    </script>
-</body>
-</html>
+                Array.from(countries).sort
