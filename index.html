@@ -27,23 +27,19 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.4);
         }
 
-        /* SOLID SLEEK HEADER: No transparency to prevent map crashes */
+        /* FLOATING HEADER: No background, just clean text on map */
         .header-container {
-            position: absolute; top: 0; left: 0; width: 100%; z-index: 1000;
-            background: #001f3f; /* Solid Navy */
-            padding: 15px 0;
-            border-bottom: 2px solid #5d4037; /* Copper/Brown accent line */
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000;
             text-align: center; pointer-events: none;
             white-space: nowrap; transition: opacity 0.4s ease;
         }
 
-        /* Hides header when a popup/card is open */
+        /* Stealth logic: Hides text when a card is open */
         #map:has(.leaflet-popup) ~ .header-container { opacity: 0; }
 
         .header-container h1 { 
-            margin: 0; font-size: 22px; color: #fdfbf7; 
-            letter-spacing: 3px; text-transform: uppercase;
-            font-weight: 300;
+            margin: 0; font-size: 22px; color: white; 
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.8); /* Ensures readability against any map part */
         }
 
         .sidebar-header { margin-top: 50px; border-bottom: 2px solid #d7ccc8; padding-bottom: 15px; margin-bottom: 20px; }
@@ -95,7 +91,7 @@
 
     <div id="map"></div>
     <div class="header-container">
-        <h1>🗺️ MY GLOBAL POUR 🥃</h1>
+        <h1>🗺️ My Global Pour 🥃</h1>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
