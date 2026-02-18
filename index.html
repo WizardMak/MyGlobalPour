@@ -76,14 +76,16 @@
         var allData = [];
         var countries = new Set();
         
-        // Define the bounds for the "Whole World" to ensure full screen coverage
-        var worldBounds = L.latLngBounds(L.latLng(-60, -170), L.latLng(75, 170));
+        // Use a deeper zoom for home to hide blue borders on mobile
+        var isMobile = window.innerWidth < 600;
+        var homeZoom = isMobile ? 2.5 : 2.8; 
+        var homeCenter = [20, 0];
 
         var map = L.map('map', { 
             zoomControl: false, 
-            minZoom: 1.2, 
+            minZoom: 1.5, 
             worldCopyJump: true 
-        }).fitBounds(worldBounds);
+        }).setView(homeCenter, homeZoom);
 
         L.control.zoom({ position: 'bottomright' }).addTo(map);
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { noWrap: false, attribution: 'Esri' }).addTo(map);
@@ -91,8 +93,7 @@
         function resetToHome() { 
             closeSidebarOnly(); 
             map.closePopup(); 
-            // Use fitBounds instead of a fixed zoom to ensure full screen map data
-            map.flyToBounds(worldBounds, { duration: 1.5, padding: [0, 0] }); 
+            map.flyTo(homeCenter, homeZoom, { duration: 1.5 }); 
         }
         
         function toggleSidebar(e) { 
@@ -148,19 +149,4 @@
                         setTimeout(() => marker.openPopup(), 1300);
                     }
 
-                    marker.on('click', function(e) { L.DomEvent.stopPropagation(e); selectItem(); });
-                    var btn = document.createElement('button');
-                    btn.className = `zoom-btn ${isBar ? 'list-in-bar' : 'list-not-in-bar'}`;
-                    btn.innerHTML = `${catInfo.emoji} ${item.Name}`;
-                    btn.onclick = function(e) { e.stopPropagation(); closeSidebarOnly(); selectItem(); };
-
-                    allData.push({ marker: marker, button: btn, category: item.Category, country: item.Country, statusFull: displayStatus });
-                });
-                var cDrop = document.getElementById('countryFilter');
-                Array.from(countries).sort().forEach(c => { var o = document.createElement('option'); o.value = c; o.innerHTML = c; cDrop.appendChild(o); });
-                filterAll();
-            }
-        });
-    </script>
-</body>
-</html>
+                    marker.on('click', function(e) { L.DomEvent.stopPropagation
