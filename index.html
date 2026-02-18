@@ -14,7 +14,7 @@
         #map { height: 100vh; width: 100vw; background: #001f3f; position: relative; z-index: 1; }
         #toggle-btn { position: absolute; top: 15px; left: 15px; z-index: 5000; background: #5d4037; color: white; border: none; padding: 12px 20px; border-radius: 50px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
         
-        /* Reset Filter Button Styling */
+        /* Added Reset Button Style */
         #reset-filters-btn { width: 100%; padding: 8px; margin-bottom: 15px; background: #d7ccc8; color: #5d4037; border: none; border-radius: 5px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
 
         .header-container { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; text-align: center; white-space: nowrap; transition: opacity 0.4s ease; cursor: pointer; pointer-events: auto; }
@@ -79,7 +79,7 @@
         var allData = [];
         var countries = new Set();
         
-        // Mobile-aware initial zoom to prevent blue borders
+        // Changed 1.5 to 1.8 to fix blue borders on mobile
         var initialZoom = window.innerWidth < 600 ? 1.8 : 2.8;
         var initialCenter = [20, 0];
 
@@ -87,11 +87,7 @@
         L.control.zoom({ position: 'bottomright' }).addTo(map);
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { noWrap: false, attribution: 'Esri' }).addTo(map);
 
-        function resetToHome() { 
-            closeSidebarOnly(); 
-            map.closePopup(); 
-            map.flyTo(initialCenter, initialZoom, { duration: 1.5 }); 
-        }
+        function resetToHome() { closeSidebarOnly(); map.closePopup(); map.flyTo(initialCenter, initialZoom, { duration: 1.5 }); }
         
         function toggleSidebar(e) { 
             if(e) e.stopPropagation(); 
@@ -102,6 +98,7 @@
 
         function closeSidebarOnly() { document.getElementById('sidebar').classList.remove('open'); }
 
+        // Added Reset Function
         function resetFilters() {
             document.getElementById('categoryFilter').value = "All";
             document.getElementById('countryFilter').value = "All";
@@ -131,4 +128,11 @@
                     var lat = parseFloat(item.Lat), lng = parseFloat(item.Long);
                     var raw = String(item.Status || "").trim().toLowerCase();
                     var isBar = (raw.startsWith("in") || raw === "mybar") && !raw.includes("not");
-                    var displayStatus = isBar ? "In My Bar" : "Not
+                    var displayStatus = isBar ? "In My Bar" : "Not in My Bar";
+                    var catInfo = spiritData[item.Category] || { emoji: "🍷", text: "A premium selection." };
+                    countries.add(item.Country);
+
+                    var icon = L.divIcon({ className: `emoji-marker ${isBar ? 'border-in-bar' : 'border-not-in-bar'}`, html: catInfo.emoji, iconSize: [30, 30], iconAnchor: [15, 15], popupAnchor: [0, -10] });
+                    var popupHtml = `<div class="tasting-card"><h2>${item.Name}</h2><div class="sub-header">${catInfo.emoji} ${item.Category} - <span class="one-liner-text">${catInfo.text}</span></div><div class="region-country">📍 Region - ${item.Country}</div><div class="status-badge ${isBar ? 'in-my-bar' : 'not-in-bar'}">${displayStatus}</div><p>${item.Description}</p></div>`;
+                    
+                    var marker = L.marker([lat, lng], { icon: icon }).bindPopup(
