@@ -72,9 +72,21 @@
         var initialZoom = window.innerWidth < 600 ? 1.5 : 2.8;
         var initialCenter = [20, 0];
 
-        var map = L.map('map', { zoomControl: false, minZoom: 1 }).setView(initialCenter, initialZoom);
+        // FIX: worldCopyJump enables the globe to loop markers endlessly
+        var map = L.map('map', { 
+            zoomControl: false, 
+            minZoom: 1, 
+            worldCopyJump: true 
+        }).setView(initialCenter, initialZoom);
+
         L.control.zoom({ position: 'bottomright' }).addTo(map);
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { noWrap: true, attribution: 'Esri' }).addTo(map);
+
+        // FIX: Removed bounds so you can spin the world without empty space
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { 
+            noWrap: false, 
+            updateWhenIdle: false, 
+            attribution: 'Esri' 
+        }).addTo(map);
 
         function resetToHome() { closeSidebarOnly(); map.closePopup(); map.flyTo(initialCenter, initialZoom, { duration: 1.5 }); }
         function toggleSidebar(e) { if(e) e.stopPropagation(); document.getElementById('sidebar').classList.toggle('open'); }
@@ -107,30 +119,4 @@
                     countries.add(item.Country);
 
                     var icon = L.divIcon({ className: `emoji-marker ${isBar ? 'border-in-bar' : 'border-not-in-bar'}`, html: catInfo.emoji, iconSize: [30, 30], iconAnchor: [15, 15], popupAnchor: [0, -10] });
-                    var popupHtml = `<div class="tasting-card"><h2>${item.Name}</h2><div class="sub-header">${catInfo.emoji} ${item.Category} - <span class="one-liner-text">${catInfo.text}</span></div><div class="region-country">📍 Region - ${item.Country}</div><div class="status-badge ${isBar ? 'in-my-bar' : 'not-in-bar'}">${displayStatus}</div><p>${item.Description}</p></div>`;
-                    
-                    var marker = L.marker([lat, lng], { icon: icon }).bindPopup(popupHtml, { autoPanPadding: L.point(50, 80), closeButton: false });
-                    
-                    function selectItem() {
-                        var z = window.innerWidth < 600 ? 6.5 : 6;
-                        map.flyTo([lat, lng], z, { duration: 1.2 });
-                        setTimeout(() => marker.openPopup(), 1300);
-                    }
-
-                    marker.on('click', function(e) { L.DomEvent.stopPropagation(e); selectItem(); });
-
-                    var btn = document.createElement('button');
-                    btn.className = `zoom-btn ${isBar ? 'list-in-bar' : 'list-not-in-bar'}`;
-                    btn.innerHTML = `${catInfo.emoji} ${item.Name}`;
-                    btn.onclick = function(e) { e.stopPropagation(); closeSidebarOnly(); selectItem(); };
-
-                    allData.push({ marker: marker, button: btn, category: item.Category, country: item.Country, statusFull: displayStatus });
-                });
-                var cDrop = document.getElementById('countryFilter');
-                Array.from(countries).sort().forEach(c => { var o = document.createElement('option'); o.value = c; o.innerHTML = c; cDrop.appendChild(o); });
-                filterAll();
-            }
-        });
-    </script>
-</body>
-</html>
+                    var popupHtml = `<div class="tasting-card"><h2>${item.Name}</h2><div class="sub-header">${catInfo.emoji} ${item.Category} - <span class="one-liner-text">${catInfo.text}</span></div><div class="region-country">📍 Region - ${item.Country}</div><div class="status
