@@ -14,7 +14,6 @@
         #map { height: 100vh; width: 100vw; background: #001f3f; position: relative; z-index: 1; }
         #toggle-btn { position: absolute; top: 15px; left: 15px; z-index: 5000; background: #5d4037; color: white; border: none; padding: 12px 20px; border-radius: 50px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
         
-        /* Reset Filter Button */
         #reset-filters-btn { width: 100%; padding: 8px; margin-bottom: 15px; background: #d7ccc8; color: #5d4037; border: none; border-radius: 5px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
 
         .header-container { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; text-align: center; white-space: nowrap; transition: opacity 0.4s ease; cursor: pointer; pointer-events: auto; }
@@ -49,7 +48,6 @@
     <div id="sidebar">
         <div class="sidebar-header">
             <h2 style="color: #5d4037; margin-bottom: 20px;">🍾 My Collection</h2>
-            
             <button id="reset-filters-btn" onclick="resetFilters()">↺ Reset All Filters</button>
 
             <span class="filter-label">Spirit Type</span>
@@ -79,8 +77,8 @@
         var allData = [];
         var countries = new Set();
         
-        // Slightly deeper zoom (1.8) to push map data to edges on mobile
-        var initialZoom = window.innerWidth < 600 ? 1.8 : 2.8;
+        // Changed to 2.0 to finally eliminate any remaining blue borders on tall phones
+        var initialZoom = window.innerWidth < 600 ? 2.0 : 2.8;
         var initialCenter = [20, 0];
 
         var map = L.map('map', { zoomControl: false, minZoom: 1, worldCopyJump: true }).setView(initialCenter, initialZoom);
@@ -143,7 +141,6 @@
                     }
 
                     marker.on('click', function(e) { L.DomEvent.stopPropagation(e); selectItem(); });
-
                     var btn = document.createElement('button');
                     btn.className = `zoom-btn ${isBar ? 'list-in-bar' : 'list-not-in-bar'}`;
                     btn.innerHTML = `${catInfo.emoji} ${item.Name}`;
