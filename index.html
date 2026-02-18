@@ -14,7 +14,6 @@
         #map { height: 100vh; width: 100vw; background: #001f3f; position: relative; z-index: 1; }
         #toggle-btn { position: absolute; top: 15px; left: 15px; z-index: 5000; background: #5d4037; color: white; border: none; padding: 12px 20px; border-radius: 50px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
         
-        /* Reset Filter Button */
         #reset-filters-btn { width: 100%; padding: 8px; margin-bottom: 15px; background: #d7ccc8; color: #5d4037; border: none; border-radius: 5px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
 
         .header-container { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; text-align: center; white-space: nowrap; transition: opacity 0.4s ease; cursor: pointer; pointer-events: auto; }
@@ -39,7 +38,6 @@
         .in-my-bar { background: #2e7d32; color: white; }
         .not-in-bar { background: #d32f2f; color: white; }
         
-        /* List Button Borders Restored */
         .zoom-btn { display: block; width: 100%; padding: 12px; margin: 8px 0; background: #fff; border: 1px solid #d7ccc8; border-radius: 8px; text-align: left; cursor: pointer; font-size: 13px; font-weight: bold; border-left: 6px solid #ccc; }
         .list-in-bar { border-left-color: #2e7d32 !important; }
         .list-not-in-bar { border-left-color: #d32f2f !important; }
@@ -50,9 +48,7 @@
     <div id="sidebar">
         <div class="sidebar-header">
             <h2 style="color: #5d4037; margin-bottom: 20px;">🍾 My Collection</h2>
-            
             <button id="reset-filters-btn" onclick="resetFilters()">↺ Reset All Filters</button>
-
             <span class="filter-label">Spirit Type</span>
             <select id="categoryFilter" class="custom-select" onchange="filterAll()"><option value="All">All Drinks</option><option value="Whiskey">Whiskey</option><option value="Gin">Gin</option><option value="Rum">Rum</option><option value="Tequila">Tequila</option><option value="Vodka">Vodka</option><option value="Brandy">Brandy</option></select>
             <span class="filter-label">Origin Country</span>
@@ -79,20 +75,30 @@
 
         var allData = [];
         var countries = new Set();
-        var initialZoom = window.innerWidth < 600 ? 1.5 : 2.8;
-        var initialCenter = [20, 0];
+        
+        // Define the bounds for the "Whole World" to ensure full screen coverage
+        var worldBounds = L.latLngBounds(L.latLng(-60, -170), L.latLng(75, 170));
 
-        var map = L.map('map', { zoomControl: false, minZoom: 1, worldCopyJump: true }).setView(initialCenter, initialZoom);
+        var map = L.map('map', { 
+            zoomControl: false, 
+            minZoom: 1.2, 
+            worldCopyJump: true 
+        }).fitBounds(worldBounds);
+
         L.control.zoom({ position: 'bottomright' }).addTo(map);
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { noWrap: false, attribution: 'Esri' }).addTo(map);
 
-        function resetToHome() { closeSidebarOnly(); map.closePopup(); map.flyTo(initialCenter, initialZoom, { duration: 1.5 }); }
+        function resetToHome() { 
+            closeSidebarOnly(); 
+            map.closePopup(); 
+            // Use fitBounds instead of a fixed zoom to ensure full screen map data
+            map.flyToBounds(worldBounds, { duration: 1.5, padding: [0, 0] }); 
+        }
         
         function toggleSidebar(e) { 
             if(e) e.stopPropagation(); 
             var sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('open');
-            // FIX: If closing the sidebar, reset the map
             if (!sidebar.classList.contains('open')) { resetToHome(); }
         }
 
@@ -143,9 +149,7 @@
                     }
 
                     marker.on('click', function(e) { L.DomEvent.stopPropagation(e); selectItem(); });
-
                     var btn = document.createElement('button');
-                    // FIX: Re-added the status-based border classes for the list
                     btn.className = `zoom-btn ${isBar ? 'list-in-bar' : 'list-not-in-bar'}`;
                     btn.innerHTML = `${catInfo.emoji} ${item.Name}`;
                     btn.onclick = function(e) { e.stopPropagation(); closeSidebarOnly(); selectItem(); };
