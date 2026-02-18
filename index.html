@@ -77,9 +77,9 @@
         var allData = [];
         var countries = new Set();
         
-        // Changed to 2.0 to finally eliminate any remaining blue borders on tall phones
+        // SETTINGS: 2.0 Zoom and India-centered coordinates [Latitude, Longitude]
         var initialZoom = window.innerWidth < 600 ? 2.0 : 2.8;
-        var initialCenter = [20, 0];
+        var initialCenter = [22, 78]; 
 
         var map = L.map('map', { zoomControl: false, minZoom: 1, worldCopyJump: true }).setView(initialCenter, initialZoom);
         L.control.zoom({ position: 'bottomright' }).addTo(map);
